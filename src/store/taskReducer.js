@@ -8,6 +8,9 @@ export function taskReducer(state = [], action) {
       newArr[elemIndex] = { ...newArr[elemIndex], ...action.payload };
       return newArr;
     }
+    case "task/delete": {
+      return state.filter((elem) => elem.id !== action.payload.id);
+    }
     default:
       return state;
   }
