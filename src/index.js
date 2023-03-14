@@ -1,36 +1,55 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import * as actions from "./store/actions";
-import { initiateStore } from "./store/store";
+import {
+  titleChange,
+  taskDeleted,
+  completeTask,
+  getTasks,
+  loadTasks,
+  getTasksLoadingStatus,
+} from "./store/task";
+import configureStore from "./store/store";
+import { Provider, useDispatch, useSelector } from "react-redux";
+import { getError } from "./store/error";
 
-const store = initiateStore();
+const store = configureStore();
 
 const App = () => {
-  const [state, setState] = useState(store.getState());
+  const state = useSelector(getTasks());
+  const isLoading = useSelector(getTasksLoadingStatus());
+  const error = useSelector(getError());
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    store.subscribe(() => setState(store.getState()));
+    dispatch(loadTasks());
   }, []);
 
-  const complitedTask = (taskId) => {
-    store.dispatch(actions.taskComplited(taskId));
-  };
   const changeTitle = (taskId) => {
-    store.dispatch(actions.titleChange(taskId));
+    dispatch(titleChange(taskId));
   };
   const deleteTask = (taskId) => {
-    store.dispatch(actions.taskDeleter(taskId));
+    dispatch(taskDeleted(taskId));
   };
+
+  if (isLoading) {
+    return <h3>...Loading</h3>;
+  }
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   return (
     <>
       {" "}
-      <h1>app</h1> <button onClick={complitedTask}>Complited</button>
+      <h1>app</h1>
       <ul>
         {state.map((el) => (
           <li key={el.id}>
             {" "}
-            <p>{el.title}</p> <p>{`Complited:${el.complited}`}</p>
-            <button onClick={() => complitedTask(el.id)}>complited</button>
+            <p>{el.title}</p> <p>{`Completed:${el.completed}`}</p>
+            <button onClick={() => dispatch(completeTask(el.id))}>
+              complete
+            </button>
             <button onClick={() => changeTitle(el.id)}>changed title</button>
             <button onClick={() => deleteTask(el.id)}>Delete Tsk</button>
             <hr />
@@ -44,6 +63,8 @@ const App = () => {
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <App />
+    <Provider store={store}>
+      <App />
+    </Provider>
   </React.StrictMode>
 );
